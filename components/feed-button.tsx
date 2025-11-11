@@ -13,14 +13,15 @@ interface FeedButtonProps {
 export function FeedButton({ onFeed, disabled = false }: FeedButtonProps) {
   const [isFeeding, setIsFeeding] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [feedCount, setFeedCount] = useState(0)
 
   const handleFeed = async () => {
     setIsFeeding(true)
     setError(null)
 
-    console.log("[v0] Feed button clicked, sending POST to /api/feed")
-
     try {
+      console.log("[v0] Sending feed command to API...")
+
       const response = await fetch("/api/feed", {
         method: "POST",
         headers: {
@@ -28,24 +29,26 @@ export function FeedButton({ onFeed, disabled = false }: FeedButtonProps) {
         },
       })
 
-      console.log("[v0] API response status:", response.status)
-      const responseData = await response.json()
-      console.log("[v0] API response data:", responseData)
+      const data = await response.json()
+      console.log("[v0] API response:", data)
 
-      if (response.ok && responseData.status === "success") {
-        console.log("[v0] Feed successful!")
-        onFeed()
-      } else {
-        const errorMsg = responseData.error || responseData.message || "Failed to dispense food"
-        console.log("[v0] Feed failed:", errorMsg)
-        setError(errorMsg)
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send feed command")
       }
+
+      // Successful feed
+      setFeedCount((prev) => prev + 1)
+      onFeed()
+      setError(null)
     } catch (error) {
-      console.error("[v0] Error communicating with API:", error)
-      setError("Connection error. Make sure ESP32 is online.")
+      console.error("[v0] Feed error:", error)
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to connect to Pet Feeder. Make sure it's powered on and the IP is set correctly.",
+      )
     }
 
-    // Simulate servo motor delay
     setTimeout(() => {
       setIsFeeding(false)
     }, 2000)
@@ -58,8 +61,11 @@ export function FeedButton({ onFeed, disabled = false }: FeedButtonProps) {
           <Activity className="w-12 h-12 mx-auto opacity-80" />
         </div>
         <h3 className="text-lg font-semibold mb-2">Dispense Food</h3>
-        <p className="text-sm opacity-90 mb-6">{isFeeding ? "Servo rotating..." : "Tap to feed your pet now"}</p>
-        {error && <p className="text-sm text-red-200 mb-4">{error}</p>}
+        <p className="text-sm opacity-90 mb-6">
+          {isFeeding ? "Servo rotating..." : `Ready to feed your pet (${feedCount} times today)`}
+        </p>
+        {error && <p className="text-sm text-red-200 mb-4 font-semibold">{error}</p>}
+
         <Button
           onClick={handleFeed}
           disabled={disabled || isFeeding}
