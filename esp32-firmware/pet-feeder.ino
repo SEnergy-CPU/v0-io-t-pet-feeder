@@ -149,17 +149,12 @@ void setupWebRoutes() {
 void handleFeed() {
   Serial.println(">>> EXECUTING FEED COMMAND <<<");
   
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.sendHeader("Content-Type", "application/json");
-  
-  // Open servo
   Serial.println("[Servo] Opening container...");
   servoMotor.write(SERVO_OPEN);
   Serial.println("[Servo] Position: 90 degrees");
   
   delay(2000);
   
-  // Close servo
   Serial.println("[Servo] Closing container...");
   servoMotor.write(SERVO_CLOSED);
   Serial.println("[Servo] Position: 0 degrees");
@@ -175,6 +170,8 @@ void handleFeed() {
   Serial.println("Sending response: " + response);
   Serial.println("=== FEED COMMAND COMPLETE ===\n");
   
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.sendHeader("Content-Type", "application/json");
   server.send(200, "application/json", response);
 }
 

@@ -32,11 +32,11 @@ export function FeedButton({ onFeed, disabled = false }: FeedButtonProps) {
       const responseData = await response.json()
       console.log("[v0] API response data:", responseData)
 
-      if (response.ok) {
+      if (response.ok && responseData.status === "success") {
         console.log("[v0] Feed successful!")
         onFeed()
       } else {
-        const errorMsg = responseData.error || "Failed to dispense food"
+        const errorMsg = responseData.error || responseData.message || "Failed to dispense food"
         console.log("[v0] Feed failed:", errorMsg)
         setError(errorMsg)
       }

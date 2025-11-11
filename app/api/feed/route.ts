@@ -35,10 +35,16 @@ export async function POST() {
     try {
       data = JSON.parse(text)
     } catch {
-      data = { message: text, status: "success" }
+      data = { message: text, status: "error" }
     }
 
     console.log("[v0] Parsed response:", data)
+
+    if (text.toLowerCase().includes("invalid") || text.toLowerCase().includes("https")) {
+      console.error("[v0] ESP32 returned an error response")
+      return Response.json({ error: "ESP32 error: " + text }, { status: 400 })
+    }
+
     return Response.json(data)
   } catch (error: any) {
     console.error("[v0] ESP32 Error:", error?.message)
